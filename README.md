@@ -1,4 +1,4 @@
-# Authentication and Authorization in Langflow
+# Access Control in Langflow
 
 The authentication and authorization components in Langflow are designed to secure your workflows by validating user credentials, checking permissions, and controlling access to resources. These components ensure that only authorized users can perform specific actions on designated resources.
 
