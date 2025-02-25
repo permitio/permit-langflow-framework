@@ -1,0 +1,6 @@
+permit>=2.7.2,<3.0.0
+python-jwt==4.1.0
+cryptography==42.0.5
+requests==2.32.3
+pytest==8.3.4
+langflow==1.1.4.post1
