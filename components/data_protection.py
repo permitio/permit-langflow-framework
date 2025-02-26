@@ -4,6 +4,7 @@ from langflow.schema.message import Message
 from langflow.template import Output
 from permit import Permit
 
+
 class DataProtectionComponent(Component):
     display_name = "Data Protection"
     description = "Gets allowed resource IDs for a user."
@@ -51,13 +52,8 @@ class DataProtectionComponent(Component):
         permit = Permit(token=self.api_key, pdp=self.pdp_url)
         permissions = await permit.get_user_permissions(self.user_id)
         allowed_ids = [
-            p.resource_id 
-            for p in permissions 
+            p.resource_id
+            for p in permissions
             if p.resource == self.resource_type and p.action == self.action
         ]
         return Message(content=allowed_ids)
-
-
-
-
-
