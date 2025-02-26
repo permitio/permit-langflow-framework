@@ -64,7 +64,11 @@ class JSONFlow:
     json: dict
 
     def get_components_by_type(self, component_type):
-        result = [node["id"] for node in self.json["data"]["nodes"] if node["data"]["type"] == component_type]
+        result = [
+            node["id"]
+            for node in self.json["data"]["nodes"]
+            if node["data"]["type"] == component_type
+        ]
         if not result:
             msg = (
                 f"Component of type {component_type} not found, "
@@ -106,7 +110,9 @@ def download_flow_from_github(name: str, version: str) -> JSONFlow:
     return JSONFlow(json=as_json)
 
 
-def download_component_from_github(module: str, file_name: str, version: str) -> Component:
+def download_component_from_github(
+    module: str, file_name: str, version: str
+) -> Component:
     version_string = f"v{version}" if version != "main" else version
     response = requests.get(
         f"https://raw.githubusercontent.com/langflow-ai/langflow/{version_string}/src/backend/base/langflow/components/{module}/{file_name}.py",
@@ -123,13 +129,19 @@ async def run_json_flow(
     return await run_flow(graph, run_input, session_id)
 
 
-async def run_flow(graph: Graph, run_input: Any | None = None, session_id: str | None = None) -> dict[str, Any]:
+async def run_flow(
+    graph: Graph, run_input: Any | None = None, session_id: str | None = None
+) -> dict[str, Any]:
     graph.prepare()
-    graph_run_inputs = [InputValueRequest(input_value=run_input, type="chat")] if run_input else []
+    graph_run_inputs = (
+        [InputValueRequest(input_value=run_input, type="chat")] if run_input else []
+    )
 
     flow_id = str(uuid.uuid4())
 
-    results, _ = await run_graph_internal(graph, flow_id, session_id=session_id, inputs=graph_run_inputs)
+    results, _ = await run_graph_internal(
+        graph, flow_id, session_id=session_id, inputs=graph_run_inputs
+    )
     outputs = {}
     for r in results:
         for out in r.outputs:
@@ -170,20 +182,32 @@ async def run_single_component(
             for input_name, handle in inputs.items():
                 if isinstance(handle, ComponentInputHandle):
                     handle_component_id = _add_component(handle.clazz, handle.inputs)
-                    graph.add_component_edge(handle_component_id, (handle.output_name, input_name), component_id)
+                    graph.add_component_edge(
+                        handle_component_id,
+                        (handle.output_name, input_name),
+                        component_id,
+                    )
         return component_id
 
     component_id = _add_component(clazz, inputs)
     graph.prepare()
-    graph_run_inputs = [InputValueRequest(input_value=run_input, type=input_type)] if run_input else []
+    graph_run_inputs = (
+        [InputValueRequest(input_value=run_input, type=input_type)] if run_input else []
+    )
 
     _, _ = await run_graph_internal(
-        graph, flow_id, session_id=session_id, inputs=graph_run_inputs, outputs=[component_id]
+        graph,
+        flow_id,
+        session_id=session_id,
+        inputs=graph_run_inputs,
+        outputs=[component_id],
     )
     return graph.get_vertex(component_id).built_object
 
 
-def build_component_instance_for_tests(version: str, module: str, file_name: str, **kwargs):
+def build_component_instance_for_tests(
+    version: str, module: str, file_name: str, **kwargs
+):
     component = download_component_from_github(module, file_name, version)
     cc_class = eval_custom_component_code(component._code)
     return cc_class(**kwargs), component._code

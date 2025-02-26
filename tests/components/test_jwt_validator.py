@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from components.jwt_validator import JWTValidatorComponent
 from tests.base import ComponentTestBaseWithoutClient
 from langflow.schema import Message
-from tests.base import DID_NOT_EXIST 
+from tests.base import DID_NOT_EXIST
 
 INVALID_FORMAT = "ABC123"
 
@@ -59,8 +59,13 @@ class TestJWTValidatorComponent(ComponentTestBaseWithoutClient):
     def test_latest_version(self, component_class, default_kwargs, mock_jwks):
         """Test that the component works with the latest version."""
         jwks, private_key = mock_jwks
-        payload = {"sub": "test-user-123", "exp": datetime.now(tz=timezone.utc) + timedelta(hours=1)}
-        token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-1"})
+        payload = {
+            "sub": "test-user-123",
+            "exp": datetime.now(tz=timezone.utc) + timedelta(hours=1),
+        }
+        token = jwt.encode(
+            payload, private_key, algorithm="RS256", headers={"kid": "test-key-1"}
+        )
         default_kwargs["jwt_token"] = token
 
         component = component_class(**default_kwargs)
@@ -79,8 +84,13 @@ class TestJWTValidatorComponent(ComponentTestBaseWithoutClient):
     def test_valid_token(self, component_class, default_kwargs, mock_jwks):
         """Test validation of a valid JWT token."""
         jwks, private_key = mock_jwks
-        payload = {"sub": "test-user-123", "exp": datetime.now(tz=timezone.utc) + timedelta(hours=1)}
-        token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-1"})
+        payload = {
+            "sub": "test-user-123",
+            "exp": datetime.now(tz=timezone.utc) + timedelta(hours=1),
+        }
+        token = jwt.encode(
+            payload, private_key, algorithm="RS256", headers={"kid": "test-key-1"}
+        )
         default_kwargs["jwt_token"] = token
 
         component = component_class(**default_kwargs)
@@ -88,13 +98,20 @@ class TestJWTValidatorComponent(ComponentTestBaseWithoutClient):
             mock_get.return_value.json.return_value = jwks
             result = component.validate_auth()
             assert isinstance(result, Message), "Result should be a Message"
-            assert result.content == "test-user-123", "Expected user ID from valid token"
+            assert (
+                result.content == "test-user-123"
+            ), "Expected user ID from valid token"
 
     def test_expired_token(self, component_class, default_kwargs, mock_jwks):
         """Test validation of an expired token."""
         jwks, private_key = mock_jwks
-        payload = {"sub": "test-user-123", "exp": datetime.now(tz=timezone.utc) - timedelta(hours=1)}
-        token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-1"})
+        payload = {
+            "sub": "test-user-123",
+            "exp": datetime.now(tz=timezone.utc) - timedelta(hours=1),
+        }
+        token = jwt.encode(
+            payload, private_key, algorithm="RS256", headers={"kid": "test-key-1"}
+        )
         default_kwargs["jwt_token"] = token
 
         component = component_class(**default_kwargs)
@@ -108,7 +125,9 @@ class TestJWTValidatorComponent(ComponentTestBaseWithoutClient):
         default_kwargs["jwt_token"] = INVALID_FORMAT
         component = component_class(**default_kwargs)
         with patch("requests.get") as mock_get:
-            mock_get.return_value.json.return_value = {"keys": []}  # Empty JWKS for invalid case
+            mock_get.return_value.json.return_value = {
+                "keys": []
+            }  # Empty JWKS for invalid case
             with pytest.raises(jwt.InvalidTokenError):
                 component.validate_auth()
 
@@ -122,5 +141,5 @@ class TestJWTValidatorComponent(ComponentTestBaseWithoutClient):
         component = component_class(**default_kwargs)
         with patch("requests.get") as mock_get:
             mock_get.return_value.json.return_value = jwks
-            with pytest.raises(KeyError):  
+            with pytest.raises(KeyError):
                 component.validate_auth()

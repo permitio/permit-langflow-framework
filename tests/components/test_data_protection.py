@@ -8,6 +8,7 @@ from langflow.schema.message import Message
 from components.data_protection import DataProtectionComponent
 from tests.base import DID_NOT_EXIST, ComponentTestBaseWithClient
 
+
 @pytest.mark.usefixtures("client")
 class TestDataProtectionComponent(ComponentTestBaseWithClient):
     @pytest.fixture
@@ -43,7 +44,9 @@ class TestDataProtectionComponent(ComponentTestBaseWithClient):
         with patch("components.data_protection.Permit") as mock_permit:
             mock_permit.return_value.get_user_permissions = AsyncMock(
                 return_value=[
-                    AsyncMock(resource_id="flight-001", resource="flight", action="book"),
+                    AsyncMock(
+                        resource_id="flight-001", resource="flight", action="book"
+                    ),
                 ]
             )
             result = await component.validate_auth()
@@ -70,11 +73,15 @@ class TestDataProtectionComponent(ComponentTestBaseWithClient):
 
         # Updated patch to target the correct import path
         with patch("components.data_protection.Permit") as mock_permit:
-            mock_permit.return_value.get_user_permissions = AsyncMock(return_value=mock_permissions)
+            mock_permit.return_value.get_user_permissions = AsyncMock(
+                return_value=mock_permissions
+            )
             result = await component.validate_auth()
             assert isinstance(result, Message), "Result should be a Message"
             assert isinstance(result.content, list), "Result content should be a list"
             assert len(result.content) == 2, "Should filter to 2 matching permissions"
             assert "flight-001" in result.content, "Expected flight-001 in result"
             assert "flight-002" in result.content, "Expected flight-002 in result"
-            assert "flight-003" not in result.content, "flight-003 should be filtered out"
+            assert (
+                "flight-003" not in result.content
+            ), "flight-003 should be filtered out"

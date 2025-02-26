@@ -27,7 +27,9 @@ from langflow.services.database.models.flow.model import Flow, FlowCreate
 from langflow.services.database.models.folder.model import Folder
 from langflow.services.database.models.transactions.model import TransactionTable
 from langflow.services.database.models.user.model import User, UserCreate, UserRead
-from langflow.services.database.models.vertex_builds.crud import delete_vertex_builds_by_flow_id
+from langflow.services.database.models.vertex_builds.crud import (
+    delete_vertex_builds_by_flow_id,
+)
 from langflow.services.database.utils import session_getter
 from langflow.services.deps import get_db_service
 from loguru import logger
@@ -63,12 +65,16 @@ def blockbuster(request):
                 "io.BufferedReader.read",
                 "io.TextIOWrapper.read",
             ]:
-                bb.functions[func].can_block_in("importlib_metadata/__init__.py", "metadata")
+                bb.functions[func].can_block_in(
+                    "importlib_metadata/__init__.py", "metadata"
+                )
 
             (
                 bb.functions["os.stat"]
                 # TODO: make set_class_code async
-                .can_block_in("langflow/custom/custom_component/component.py", "set_class_code")
+                .can_block_in(
+                    "langflow/custom/custom_component/component.py", "set_class_code"
+                )
                 # TODO: follow discussion in https://github.com/encode/httpx/discussions/3456
                 .can_block_in("httpx/_client.py", "_init_transport")
                 .can_block_in("rich/traceback.py", "_render_stack")
@@ -76,15 +82,24 @@ def blockbuster(request):
             )
 
             for func in ["os.stat", "os.path.abspath", "os.scandir"]:
-                bb.functions[func].can_block_in("alembic/util/pyfiles.py", "load_python_file")
+                bb.functions[func].can_block_in(
+                    "alembic/util/pyfiles.py", "load_python_file"
+                )
 
             for func in ["os.path.abspath", "os.scandir"]:
-                bb.functions[func].can_block_in("alembic/script/base.py", "_load_revisions")
+                bb.functions[func].can_block_in(
+                    "alembic/script/base.py", "_load_revisions"
+                )
 
             (
                 bb.functions["os.path.abspath"]
-                .can_block_in("loguru/_better_exceptions.py", {"_get_lib_dirs", "_format_exception"})
-                .can_block_in("sqlalchemy/dialects/sqlite/pysqlite.py", "create_connect_args")
+                .can_block_in(
+                    "loguru/_better_exceptions.py",
+                    {"_get_lib_dirs", "_format_exception"},
+                )
+                .can_block_in(
+                    "sqlalchemy/dialects/sqlite/pysqlite.py", "create_connect_args"
+                )
             )
             yield bb
 
@@ -92,7 +107,10 @@ def blockbuster(request):
 def pytest_configure(config):
     config.addinivalue_line("markers", "noclient: don't create a client for this test")
     config.addinivalue_line("markers", "load_flows: load the flows for this test")
-    config.addinivalue_line("markers", "api_key_required: run only if the api key is set in the environment variables")
+    config.addinivalue_line(
+        "markers",
+        "api_key_required: run only if the api key is set in the environment variables",
+    )
     data_path = Path(__file__).parent.absolute() / "data"
 
     pytest.BASIC_EXAMPLE_PATH = data_path / "basic_example.json"
@@ -103,7 +121,9 @@ def pytest_configure(config):
     pytest.VECTOR_STORE_GROUPED_EXAMPLE_PATH = data_path / "vector_store_grouped.json"
     pytest.WEBHOOK_TEST = data_path / "WebhookTest.json"
 
-    pytest.BASIC_CHAT_WITH_PROMPT_AND_HISTORY = data_path / "BasicChatwithPromptandHistory.json"
+    pytest.BASIC_CHAT_WITH_PROMPT_AND_HISTORY = (
+        data_path / "BasicChatwithPromptandHistory.json"
+    )
     pytest.CHAT_INPUT = data_path / "ChatInputTest.json"
     pytest.TWO_OUTPUTS = data_path / "TwoOutputsTest.json"
     pytest.VECTOR_STORE_PATH = data_path / "Vector_store.json"
@@ -131,7 +151,9 @@ def get_text():
         pytest.MEMORY_CHATBOT_NO_LLM,
         pytest.LOOP_TEST,
     ]:
-        assert path.exists(), f"File {path} does not exist. Available files: {list(data_path.iterdir())}"
+        assert (
+            path.exists()
+        ), f"File {path} does not exist. Available files: {list(data_path.iterdir())}"
 
 
 async def delete_transactions_by_flow_id(db: AsyncSession, flow_id: UUID):
@@ -173,7 +195,9 @@ async def async_client() -> AsyncGenerator:
 
 @pytest.fixture(name="session")
 def session_fixture():
-    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         yield session
@@ -182,7 +206,11 @@ def session_fixture():
 
 @pytest.fixture
 async def async_session():
-    engine = create_async_engine("sqlite+aiosqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    engine = create_async_engine(
+        "sqlite+aiosqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
     async with AsyncSession(engine, expire_on_commit=False) as session:
@@ -232,7 +260,9 @@ def distributed_client_fixture(
         monkeypatch.setenv("LANGFLOW_AUTO_LOGIN", "false")
         # monkeypatch langflow.services.task.manager.USE_CELERY to True
         # monkeypatch.setattr(manager, "USE_CELERY", True)
-        monkeypatch.setattr(celery_app, "celery_app", celery_app.make_celery("langflow", Config))
+        monkeypatch.setattr(
+            celery_app, "celery_app", celery_app.make_celery("langflow", Config)
+        )
 
         # def get_session_override():
         #     return session
@@ -364,7 +394,8 @@ async def client_fixture(
             monkeypatch.setenv("LANGFLOW_AUTO_LOGIN", "false")
             if "load_flows" in request.keywords:
                 shutil.copyfile(
-                    pytest.BASIC_EXAMPLE_PATH, Path(load_flows_dir) / "c54f9130-f2fa-4a3e-b22a-3856d946351b.json"
+                    pytest.BASIC_EXAMPLE_PATH,
+                    Path(load_flows_dir) / "c54f9130-f2fa-4a3e-b22a-3856d946351b.json",
                 )
                 monkeypatch.setenv("LANGFLOW_LOAD_FLOWS_PATH", load_flows_dir)
                 monkeypatch.setenv("LANGFLOW_AUTO_LOGIN", "true")
@@ -382,8 +413,14 @@ async def client_fixture(
         app, db_path = await asyncio.to_thread(init_app)
         # app.dependency_overrides[get_session] = get_session_override
         async with (
-            LifespanManager(app, startup_timeout=None, shutdown_timeout=None) as manager,
-            AsyncClient(transport=ASGITransport(app=manager.app), base_url="http://testserver/", http2=True) as client,
+            LifespanManager(
+                app, startup_timeout=None, shutdown_timeout=None
+            ) as manager,
+            AsyncClient(
+                transport=ASGITransport(app=manager.app),
+                base_url="http://testserver/",
+                http2=True,
+            ) as client,
         ):
             yield client
         # app.dependency_overrides.clear()
@@ -497,7 +534,9 @@ async def flow(
     active_user,
 ):
     loaded_json = json.loads(json_flow)
-    flow_data = FlowCreate(name="test_flow", data=loaded_json.get("data"), user_id=active_user.id)
+    flow_data = FlowCreate(
+        name="test_flow", data=loaded_json.get("data"), user_id=active_user.id
+    )
 
     flow = Flow.model_validate(flow_data)
     async with session_getter(get_db_service()) as session:
@@ -525,12 +564,16 @@ async def added_flow_webhook_test(client, json_webhook_test, logged_in_headers):
     flow = orjson.loads(json_webhook_test)
     data = flow["data"]
     flow = FlowCreate(name="Basic Chat", description="description", data=data)
-    response = await client.post("api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers)
+    response = await client.post(
+        "api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers
+    )
     assert response.status_code == 201
     assert response.json()["name"] == flow.name
     assert response.json()["data"] == flow.data
     yield response.json()
-    await client.delete(f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers)
+    await client.delete(
+        f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers
+    )
 
 
 @pytest.fixture
@@ -538,12 +581,16 @@ async def added_flow_chat_input(client, json_chat_input, logged_in_headers):
     flow = orjson.loads(json_chat_input)
     data = flow["data"]
     flow = FlowCreate(name="Chat Input", description="description", data=data)
-    response = await client.post("api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers)
+    response = await client.post(
+        "api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers
+    )
     assert response.status_code == 201
     assert response.json()["name"] == flow.name
     assert response.json()["data"] == flow.data
     yield response.json()
-    await client.delete(f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers)
+    await client.delete(
+        f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers
+    )
 
 
 @pytest.fixture
@@ -551,12 +598,16 @@ async def added_flow_two_outputs(client, json_two_outputs, logged_in_headers):
     flow = orjson.loads(json_two_outputs)
     data = flow["data"]
     flow = FlowCreate(name="Two Outputs", description="description", data=data)
-    response = await client.post("api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers)
+    response = await client.post(
+        "api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers
+    )
     assert response.status_code == 201
     assert response.json()["name"] == flow.name
     assert response.json()["data"] == flow.data
     yield response.json()
-    await client.delete(f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers)
+    await client.delete(
+        f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers
+    )
 
 
 @pytest.fixture
@@ -564,12 +615,16 @@ async def added_vector_store(client, json_vector_store, logged_in_headers):
     vector_store = orjson.loads(json_vector_store)
     data = vector_store["data"]
     vector_store = FlowCreate(name="Vector Store", description="description", data=data)
-    response = await client.post("api/v1/flows/", json=vector_store.model_dump(), headers=logged_in_headers)
+    response = await client.post(
+        "api/v1/flows/", json=vector_store.model_dump(), headers=logged_in_headers
+    )
     assert response.status_code == 201
     assert response.json()["name"] == vector_store.name
     assert response.json()["data"] == vector_store.data
     yield response.json()
-    await client.delete(f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers)
+    await client.delete(
+        f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers
+    )
 
 
 @pytest.fixture
@@ -577,14 +632,21 @@ async def added_webhook_test(client, json_webhook_test, logged_in_headers):
     webhook_test = orjson.loads(json_webhook_test)
     data = webhook_test["data"]
     webhook_test = FlowCreate(
-        name="Webhook Test", description="description", data=data, endpoint_name=webhook_test["endpoint_name"]
+        name="Webhook Test",
+        description="description",
+        data=data,
+        endpoint_name=webhook_test["endpoint_name"],
     )
-    response = await client.post("api/v1/flows/", json=webhook_test.model_dump(), headers=logged_in_headers)
+    response = await client.post(
+        "api/v1/flows/", json=webhook_test.model_dump(), headers=logged_in_headers
+    )
     assert response.status_code == 201
     assert response.json()["name"] == webhook_test.name
     assert response.json()["data"] == webhook_test.data
     yield response.json()
-    await client.delete(f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers)
+    await client.delete(
+        f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers
+    )
 
 
 @pytest.fixture
@@ -593,10 +655,14 @@ async def flow_component(client: AsyncClient, logged_in_headers):
     graph = Graph(start=chat_input, end=chat_input)
     graph_dict = graph.dump(name="Chat Input Component")
     flow = FlowCreate(**graph_dict)
-    response = await client.post("api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers)
+    response = await client.post(
+        "api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers
+    )
     assert response.status_code == 201
     yield response.json()
-    await client.delete(f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers)
+    await client.delete(
+        f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers
+    )
 
 
 @pytest.fixture
@@ -630,10 +696,14 @@ async def get_simple_api_test(client, logged_in_headers, json_simple_api_test):
     flow = orjson.loads(json_simple_api_test)
     data = flow["data"]
     flow = FlowCreate(name="Simple API Test", data=data, description="Simple API Test")
-    response = await client.post("api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers)
+    response = await client.post(
+        "api/v1/flows/", json=flow.model_dump(), headers=logged_in_headers
+    )
     assert response.status_code == 201
     yield response.json()
-    await client.delete(f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers)
+    await client.delete(
+        f"api/v1/flows/{response.json()['id']}", headers=logged_in_headers
+    )
 
 
 @pytest.fixture(name="starter_project")

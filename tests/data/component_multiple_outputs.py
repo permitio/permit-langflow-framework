@@ -9,7 +9,11 @@ class MultipleOutputsComponent(Component):
         IntInput(display_name="Number", name="number"),
     ]
     outputs = [
-        Output(display_name="Certain Output", name="certain_output", method="certain_output"),
+        Output(
+            display_name="Certain Output",
+            name="certain_output",
+            method="certain_output",
+        ),
         Output(display_name="Other Output", name="other_output", method="other_output"),
     ]
 

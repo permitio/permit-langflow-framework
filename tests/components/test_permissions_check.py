@@ -7,7 +7,6 @@ from langflow.schema.message import Message
 
 from components.permissions_check import PermissionsCheckComponent
 from tests.base import ComponentTestBaseWithClient, DID_NOT_EXIST
-from tests.constants import SUPPORTED_VERSIONS
 
 
 @pytest.mark.usefixtures("client")
@@ -64,7 +63,9 @@ class TestPermissionsCheckComponent(ComponentTestBaseWithClient):
             await component.validate_auth()
             result = component.allowed_result()
             assert isinstance(result, Message), "Result should be a Message"
-            assert result.content == "Permission granted for test-user to book on flight"
+            assert (
+                result.content == "Permission granted for test-user to book on flight"
+            )
 
             mock_instance.check = AsyncMock(return_value=False)
             await component.validate_auth()

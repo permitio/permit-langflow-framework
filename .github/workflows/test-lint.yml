@@ -26,7 +26,7 @@ jobs:
 
     - name: Run linting
       run: |
-        flake8 . --max-line-length=100
+        flake8 . --max-line-length=150
 
     - name: Run tests
       run: |

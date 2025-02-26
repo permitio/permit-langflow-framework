@@ -52,7 +52,9 @@ class ComponentTestBase:
         msg = f"{self.__class__.__name__} must implement the file_names_mapping fixture"
         raise NotImplementedError(msg)
 
-    async def component_setup(self, component_class: type[Any], default_kwargs: dict[str, Any]) -> Component:
+    async def component_setup(
+        self, component_class: type[Any], default_kwargs: dict[str, Any]
+    ) -> Component:
         mock_vertex = Mock(spec=Vertex)
         mock_vertex.graph = Mock(spec=Graph)
         mock_vertex.graph.session_id = str(uuid4())
@@ -63,23 +65,31 @@ class ComponentTestBase:
         component_instance._vertex = mock_vertex
         return component_instance
 
-    async def test_latest_version(self, component_class: type[Any], default_kwargs: dict[str, Any]) -> None:
+    async def test_latest_version(
+        self, component_class: type[Any], default_kwargs: dict[str, Any]
+    ) -> None:
         """Test that the component works with the latest version."""
         component_instance = await self.component_setup(component_class, default_kwargs)
         result = await component_instance.run()
         assert result is not None, "Component returned None for the latest version."
 
-    def test_all_versions_have_a_file_name_defined(self, file_names_mapping: list[VersionComponentMapping]) -> None:
+    def test_all_versions_have_a_file_name_defined(
+        self, file_names_mapping: list[VersionComponentMapping]
+    ) -> None:
         """Ensure all supported versions have a file name defined."""
         if not file_names_mapping:
             msg = f"file_names_mapping is empty for {self.__class__.__name__}. Skipping versions test."
             pytest.skip(msg)
 
-        version_mappings = {mapping["version"]: mapping for mapping in file_names_mapping}
+        version_mappings = {
+            mapping["version"]: mapping for mapping in file_names_mapping
+        }
 
         for version in SUPPORTED_VERSIONS:
             if version not in version_mappings:
-                supported_versions = ", ".join(sorted(m["version"] for m in file_names_mapping))
+                supported_versions = ", ".join(
+                    sorted(m["version"] for m in file_names_mapping)
+                )
                 msg = (
                     f"Version {version} not found in file_names_mapping for {self.__class__.__name__}.\n"
                     f"Currently defined versions: {supported_versions}\n"
@@ -112,15 +122,22 @@ class ComponentTestBase:
         """Test if the component works across different versions."""
         if not file_names_mapping:
             pytest.skip("No file names mapping defined for this component.")
-        version_mappings = {mapping["version"]: mapping for mapping in file_names_mapping}
+        version_mappings = {
+            mapping["version"]: mapping for mapping in file_names_mapping
+        }
 
         mapping = version_mappings[version]
         if mapping["file_name"] is DID_NOT_EXIST:
-            pytest.skip(f"Skipping version {version} as it does not have a file name defined.")
+            pytest.skip(
+                f"Skipping version {version} as it does not have a file name defined."
+            )
 
         try:
             instance, component_code = build_component_instance_for_tests(
-                version, file_name=mapping["file_name"], module=mapping["module"], **default_kwargs
+                version,
+                file_name=mapping["file_name"],
+                module=mapping["module"],
+                **default_kwargs,
             )
         except Exception as e:
             msg = (

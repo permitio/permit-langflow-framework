@@ -4,6 +4,7 @@ from langflow.template import Output
 from langflow.schema.message import Message
 from permit import Permit
 
+
 class PermissionsCheckComponent(Component):
     display_name = "Permissions Check"
     description = "Checks if a user is allowed an action on a resource, with separate outputs for allowed and denied."
@@ -60,23 +61,26 @@ class PermissionsCheckComponent(Component):
 
     async def validate_auth(self) -> bool:
         permit = Permit(token=self.api_key, pdp=self.pdp_url)
-        context = {"tenant": self.tenant} if hasattr(self, 'tenant') and self.tenant else {}
-        
+        context = (
+            {"tenant": self.tenant} if hasattr(self, "tenant") and self.tenant else {}
+        )
+
         # Get the result from permit service
         self._permission_result = await permit.check(
-            self.user_id, 
-            self.action, 
-            self.resource, 
-            context=context
+            self.user_id, self.action, self.resource, context=context
         )
         return self._permission_result
 
     def allowed_result(self) -> Message:
         if self._permission_result:
-            return Message(content=f"Permission granted for {self.user_id} to {self.action} on {self.resource}")
+            return Message(
+                content=f"Permission granted for {self.user_id} to {self.action} on {self.resource}"
+            )
         return Message(content="")
 
     def denied_result(self) -> Message:
         if not self._permission_result:
-            return Message(content=f"Permission denied for {self.user_id} to {self.action} on {self.resource}")
+            return Message(
+                content=f"Permission denied for {self.user_id} to {self.action} on {self.resource}"
+            )
         return Message(content="")

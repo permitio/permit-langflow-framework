@@ -1,23 +1,20 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
     hooks:
-      - id: check-case-conflict
-      - id: end-of-file-fixer
-        # python, js and ts only
-        files: \.(py|js|ts)$
-      - id: mixed-line-ending
-        files: \.(py|js|ts)$
-        args:
-          - --fix=lf
-      - id: trailing-whitespace
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.3
+      - id: black
+        language_version: python3
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.2
     hooks:
-      - id: ruff
-        name: ruff check
-        types_or: [python, pyi]
-        args: [--fix]
-      - id: ruff-format
-        types_or: [python, pyi]
-        args: [--config, pyproject.toml]
+      - id: flake8
+        args: [--max-line-length=150]
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Run Pytest
+        entry: pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+
