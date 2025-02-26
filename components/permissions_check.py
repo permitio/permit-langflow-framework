@@ -54,19 +54,29 @@ class PermissionsCheckComponent(Component):
         Output(display_name="Denied", name="denied", method="denied_result"),
     ]
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._permission_result = False
+
     async def validate_auth(self) -> bool:
         permit = Permit(token=self.api_key, pdp=self.pdp_url)
-        context = {"tenant": self.tenant} if self.tenant else {}
-        is_allowed = await permit.check(self.user_id, self.action, self.resource, context)
-        self.status = is_allowed  # Store the result for use in output methods
-        return is_allowed
+        context = {"tenant": self.tenant} if hasattr(self, 'tenant') and self.tenant else {}
+        
+        # Get the result from permit service
+        self._permission_result = await permit.check(
+            self.user_id, 
+            self.action, 
+            self.resource, 
+            context=context
+        )
+        return self._permission_result
 
     def allowed_result(self) -> Message:
-        if self.status:  # True case
+        if self._permission_result:
             return Message(content=f"Permission granted for {self.user_id} to {self.action} on {self.resource}")
-        return Message(content="")  # Empty message instead of None
+        return Message(content="")
 
     def denied_result(self) -> Message:
-        if not self.status:  # False case
+        if not self._permission_result:
             return Message(content=f"Permission denied for {self.user_id} to {self.action} on {self.resource}")
-        return Message(content="")  # Empty message instead of None
+        return Message(content="")
