@@ -25,7 +25,7 @@ class TestPermissionsCheckComponent(ComponentTestBaseWithClient):
             "action": "book",
             "resource": "flight",
             "pdp_url": "http://localhost:7766",
-            "api_key": "permit_key_OaZWBEuuZXbHCSyC2KOsdipNVJksWAPRZ5WTfdyft01a5ELRXbcYbxCU8m790gDjPjZUfhORXQ9h6p5YobDLn4",
+            "api_key": "permit_key_",
         }
 
     @pytest.fixture

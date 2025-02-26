@@ -3,7 +3,7 @@ python-jwt==4.1.0
 cryptography==42.0.5
 requests==2.32.3
 pytest==8.3.4
-langflow==1.1.4.post1
+langflow==1.1.4
 blockbuster>=1.5.8,<1.6
 asgi-lifespan>=2.1.0
 
