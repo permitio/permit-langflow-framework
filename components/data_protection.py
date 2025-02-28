@@ -4,7 +4,6 @@ from langflow.schema.message import Message
 from langflow.template import Output
 from permit import Permit
 
-
 class DataProtectionComponent(Component):
     display_name = "Data Protection"
     description = "Gets allowed resource IDs for a user."
