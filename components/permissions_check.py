@@ -4,6 +4,7 @@ from langflow.template import Output
 from langflow.schema.message import Message
 from permit import Permit
 
+
 class PermissionsCheckComponent(Component):
     display_name = "Permissions Check"
     description = "Checks if a user is allowed an action on a resource, with separate outputs for allowed and denied."
