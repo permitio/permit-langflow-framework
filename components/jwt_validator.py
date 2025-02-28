@@ -1,11 +1,13 @@
 import base64
-from langflow.custom import Component
-from langflow.inputs import MessageTextInput
-from langflow.template import Output
-from langflow.schema.message import Message
+
 import jwt
 import requests
 from jwt import PyJWK
+
+from langflow.custom import Component
+from langflow.inputs import MessageTextInput
+from langflow.schema.message import Message
+from langflow.template import Output
 
 
 class JWTValidatorComponent(Component):
@@ -33,7 +35,7 @@ class JWTValidatorComponent(Component):
     ]
 
     def validate_auth(self) -> Message:
-        response = requests.get(self.jwks_url)
+        response = requests.get(self.jwks_url, timeout=10)
         jwks = response.json()
         headers = jwt.get_unverified_header(self.jwt_token)
 
@@ -48,15 +50,16 @@ class JWTValidatorComponent(Component):
             payload = jwt.decode(self.jwt_token, public_key, algorithms=["RS256"])
             return Message(content=payload["sub"])
         except KeyError as e:
-            raise KeyError(f"Missing key in JWT or JWKS: {str(e)}")
+            error_message = f"Missing key in JWT or JWKS: {e!s}"
+            raise KeyError(error_message) from e
         except jwt.ExpiredSignatureError:
             raise
         except jwt.PyJWTError as e:
-            raise jwt.InvalidTokenError(f"JWT validation failed: {str(e)}")
+            error_message = f"JWT validation failed: {e!s}"
+            raise jwt.InvalidTokenError(error_message) from e
 
     def _int_to_base64url(self, value: int) -> str:
         """Convert an integer to a Base64URL-encoded string."""
         byte_length = (value.bit_length() + 7) // 8
         value_bytes = value.to_bytes(byte_length, byteorder="big")
-        encoded = base64.urlsafe_b64encode(value_bytes).rstrip(b"=").decode("ascii")
-        return encoded
+        return base64.urlsafe_b64encode(value_bytes).rstrip(b"=").decode("ascii")
